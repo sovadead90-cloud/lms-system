@@ -2,9 +2,10 @@ package com.example.service.impl;
 
 import com.example.dto.request.GroupRequestDto;
 import com.example.dto.response.GroupResponseDto;
-import com.example.entity.GroupEntity;
-import com.example.entity.StudentEntity;
+import com.example.entity.Group;
+import com.example.entity.Student;
 import com.example.exception.BusinessRuleException;
+import com.example.exception.ExceptionMessages;
 import com.example.exception.ResourceNotFoundException;
 import com.example.mapper.GroupMapper;
 import com.example.repository.GroupRepository;
@@ -29,26 +30,26 @@ public class GroupServiceImpl implements GroupService {
     @Override
     @Transactional
     public GroupResponseDto createGroup(GroupRequestDto dto) {
-        GroupEntity group = groupMapper.toEntity(dto);
+        Group group = groupMapper.toEntity(dto);
         return groupMapper.toDto(groupRepository.save(group));
     }
 
     @Override
     @Transactional
     public GroupResponseDto updateGroup(Long id, GroupRequestDto dto) {
-        GroupEntity existing = groupRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Группа с id " + id + " не найдена"));
-        existing.setName(dto.getName());
+        Group existing = groupRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.GROUP_NOT_FOUND.formatted(id)));
+        existing.setName(dto.name());
         return groupMapper.toDto(groupRepository.save(existing));
     }
 
     @Override
     @Transactional
     public void deleteGroup(Long id) {
-        GroupEntity group = groupRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Группа с id " + id + " не найдена"));
+        Group group = groupRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.GROUP_NOT_FOUND.formatted(id)));
 
-        for (StudentEntity student : group.getStudents()) {
+        for (Student student : group.getStudents()) {
             if (student.getGroups().size() <= 1) {
                 throw new BusinessRuleException("Нельзя удалить группу с id " + id +
                         ", так как студент " + student.getFirstName() + " " + student.getLastName() +
@@ -56,8 +57,8 @@ public class GroupServiceImpl implements GroupService {
             }
         }
 
-        Set<StudentEntity> students = new HashSet<>(group.getStudents());
-        for (StudentEntity student : students) {
+        Set<Student> students = new HashSet<>(group.getStudents());
+        for (Student student : students) {
             student.removeGroup(group);
         }
 
@@ -68,7 +69,7 @@ public class GroupServiceImpl implements GroupService {
     public GroupResponseDto getGroupById(Long id) {
         return groupRepository.findById(id)
                 .map(groupMapper::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Группа с id " + id + " не найдена"));
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.GROUP_NOT_FOUND.formatted(id)));
     }
 
     @Override

@@ -7,31 +7,28 @@ import lombok.Setter;
 import java.util.Objects;
 
 @Entity
-@Table(name = "courses")
+@Table(name = "teachers")
 @Getter
 @Setter
+public class Teacher {
 
-public class CourseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
 
-    @Column(name = "description")
-    private String description;
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "teacher_id", nullable = false)
-    private TeacherEntity teacher;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        CourseEntity course = (CourseEntity) o;
-        return Objects.equals(id, course.id);
+        Teacher teacher = (Teacher) o;
+        return Objects.equals(id, teacher.id);
     }
 
     @Override

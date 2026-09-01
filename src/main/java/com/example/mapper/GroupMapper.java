@@ -2,11 +2,13 @@ package com.example.mapper;
 
 import com.example.dto.request.GroupRequestDto;
 import com.example.dto.response.GroupResponseDto;
-import com.example.entity.GroupEntity;
+import com.example.entity.Group;
 import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface GroupMapper {
-    GroupEntity toEntity(GroupRequestDto dto);
-    GroupResponseDto toDto(GroupEntity entity);
+    Group toEntity(GroupRequestDto dto);
+
+    GroupResponseDto toDto(Group entity);
 }

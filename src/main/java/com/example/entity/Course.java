@@ -3,32 +3,35 @@ package com.example.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import java.util.HashSet;
+
 import java.util.Objects;
-import java.util.Set;
 
 @Entity
-@Table(name = "groups")
+@Table(name = "courses")
 @Getter
 @Setter
 
-public class GroupEntity {
+public class Course {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", nullable = false, unique = true) // 1
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @ManyToMany(mappedBy = "groups") // 2
-    private Set<StudentEntity> students = new HashSet<>(); // 3
+    @Column(name = "description")
+    private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "teacher_id", nullable = false)
+    private Teacher teacher;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        GroupEntity group = (GroupEntity) o;
-        return Objects.equals(id, group.id);
+        Course course = (Course) o;
+        return Objects.equals(id, course.id);
     }
 
     @Override

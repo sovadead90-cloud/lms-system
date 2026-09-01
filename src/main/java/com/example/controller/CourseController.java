@@ -8,9 +8,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,37 +24,34 @@ public class CourseController {
 
     @PostMapping
     @Operation(summary = "Создать новый курс")
-    public ResponseEntity<CourseResponseDto> createCourse(@Valid @RequestBody CourseRequestDto dto) {
+    public ResponseEntity<CourseResponseDto> create(@Valid @RequestBody CourseRequestDto dto) {
         return new ResponseEntity<>(courseService.createCourse(dto), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Изменить данные курса")
-    public ResponseEntity<CourseResponseDto> updateCourse(@PathVariable Long id, @Valid @RequestBody CourseRequestDto dto) {
+    public ResponseEntity<CourseResponseDto> update(@PathVariable Long id, @Valid @RequestBody CourseRequestDto dto) {
         return ResponseEntity.ok(courseService.updateCourse(id, dto));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить курс")
-    public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         courseService.deleteCourse(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Получить информацию о курсе по ID")
-    public ResponseEntity<CourseResponseDto> getCourseById(@PathVariable Long id) {
+    public ResponseEntity<CourseResponseDto> getById(@PathVariable Long id) {
         return ResponseEntity.ok(courseService.getCourseById(id));
     }
 
     @GetMapping
     @Operation(summary = "Просмотреть список всех курсов с пагинацией")
-    public ResponseEntity<Page<CourseResponseDto>> getAllCourses(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "name") String sortBy
+    public ResponseEntity<Page<CourseResponseDto>> getAll(
+            @PageableDefault(page = 0, size = 10, sort = "name") Pageable pageable
     ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).ascending());
         return ResponseEntity.ok(courseService.getAllCourses(pageable));
     }
 }

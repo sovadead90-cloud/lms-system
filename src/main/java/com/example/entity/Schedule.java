@@ -14,7 +14,7 @@ import java.util.Objects;
 )
 @Getter
 @Setter
-public class ScheduleEntity {
+public class Schedule {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,15 +22,15 @@ public class ScheduleEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
-    private GroupEntity group;
+    private Group group;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id", nullable = false)
-    private TeacherEntity teacher;
+    private Teacher teacher;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
-    private CourseEntity course;
+    private Course course;
 
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
@@ -42,8 +42,8 @@ public class ScheduleEntity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ScheduleEntity scheduleEntity = (ScheduleEntity) o;
-        return Objects.equals(id, scheduleEntity.id);
+        Schedule schedule = (Schedule) o;
+        return Objects.equals(id, schedule.id);
     }
 
     @Override

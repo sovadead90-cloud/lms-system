@@ -16,14 +16,14 @@ public class ScheduleCleanupService {
 
     private final ScheduleRepository scheduleRepository;
 
-    @Scheduled(cron = "0 0 3 * * ?")
+    @Scheduled(cron = "${app.cron.cleanup-schedule}")
     @Transactional
     public void removeExpiredSchedules() {
         log.info("Фоновая задача: Старт очистки устаревшего расписания...");
 
         LocalDateTime oneYearAgo = LocalDateTime.now().minusYears(1);
 
-        int deletedCount = scheduleRepository.deleteOldSchedules(oneYearAgo);
+        int deletedCount = scheduleRepository.deleteByEndTimeBefore(oneYearAgo);
 
         log.info("Фоновая задача успешно завершена. Удалено устаревших записей расписания: {}", deletedCount);
     }

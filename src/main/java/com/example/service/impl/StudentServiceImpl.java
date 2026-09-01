@@ -2,9 +2,10 @@ package com.example.service.impl;
 
 import com.example.dto.request.StudentRequestDto;
 import com.example.dto.response.StudentResponseDto;
-import com.example.entity.GroupEntity;
-import com.example.entity.StudentEntity;
+import com.example.entity.Group;
+import com.example.entity.Student;
 import com.example.exception.BusinessRuleException;
+import com.example.exception.ExceptionMessages;
 import com.example.exception.ResourceNotFoundException;
 import com.example.mapper.StudentMapper;
 import com.example.repository.GroupRepository;
@@ -33,43 +34,43 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public StudentResponseDto createStudent(StudentRequestDto dto) {
-        if (dto.getGroupIds() == null || dto.getGroupIds().isEmpty()) {
+        if (dto.groupIds() == null || dto.groupIds().isEmpty()) {
             throw new BusinessRuleException("Студент должен быть записан минимум в одну группу!");
         }
 
-        StudentEntity student = studentMapper.toEntity(dto);
+        Student student = studentMapper.toEntity(dto);
 
-        for (Long groupId : dto.getGroupIds()) {
-            GroupEntity group = groupRepository.findById(groupId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Группа с id " + groupId + " не найдена"));
+        for (Long groupId : dto.groupIds()) {
+            Group group = groupRepository.findById(groupId)
+                    .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.GROUP_NOT_FOUND.formatted(groupId)));
             student.addGroup(group);
         }
 
-        StudentEntity saved = studentRepository.save(student);
+        Student saved = studentRepository.save(student);
         return studentMapper.toDto(saved);
     }
 
     @Override
     @Transactional
     public StudentResponseDto updateStudent(Long id, StudentRequestDto dto) {
-        StudentEntity existing = studentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Студент с id " + id + " не найден"));
+        Student existing = studentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.STUDENT_NOT_FOUND.formatted(id)));
 
-        if (dto.getGroupIds() == null || dto.getGroupIds().isEmpty()) {
+        if (dto.groupIds() == null || dto.groupIds().isEmpty()) {
             throw new BusinessRuleException("Студент должен состоять минимум в одной группе!");
         }
 
-        existing.setFirstName(dto.getFirstName());
-        existing.setLastName(dto.getLastName());
+        existing.setFirstName(dto.firstName());
+        existing.setLastName(dto.firstName());
 
-        Set<GroupEntity> oldGroups = new HashSet<>(existing.getGroups());
-        for (GroupEntity group : oldGroups) {
+        Set<Group> oldGroups = new HashSet<>(existing.getGroups());
+        for (Group group : oldGroups) {
             existing.removeGroup(group);
         }
 
-        for (Long groupId : dto.getGroupIds()) {
-            GroupEntity group = groupRepository.findById(groupId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Группа с id " + groupId + " не найдена"));
+        for (Long groupId : dto.groupIds()) {
+            Group group = groupRepository.findById(groupId)
+                    .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.GROUP_NOT_FOUND.formatted(groupId)));
             existing.addGroup(group);
         }
 
@@ -79,11 +80,11 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public void deleteStudent(Long id) {
-        StudentEntity student = studentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Студент с id " + id + " не найден"));
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.STUDENT_NOT_FOUND.formatted(id)));
 
-        Set<GroupEntity> groups = new HashSet<>(student.getGroups());
-        for (GroupEntity group : groups) {
+        Set<Group> groups = new HashSet<>(student.getGroups());
+        for (Group group : groups) {
             student.removeGroup(group);
         }
 
@@ -94,15 +95,15 @@ public class StudentServiceImpl implements StudentService {
     public StudentResponseDto getStudentById(Long id) {
         return studentRepository.findById(id)
                 .map(studentMapper::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Студент с id " + id + " не найден"));
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.STUDENT_NOT_FOUND.formatted(id)));
     }
 
     public Page<StudentResponseDto> searchStudents(String firstName, String lastName, Long groupId, Pageable pageable) {
-        Specification<StudentEntity> spec = Specification
+        Specification<Student> spec = Specification
                 .where(StudentSpecifications.hasFirstName(firstName))
                 .and(StudentSpecifications.hasLastName(lastName))
                 .and(StudentSpecifications.isInGroup(groupId));
-        Page<StudentEntity> studentPage = studentRepository.findAll(spec, pageable);
+        Page<Student> studentPage = studentRepository.findAll(spec, pageable);
         return studentPage.map(studentMapper::toDto);
     }
 }

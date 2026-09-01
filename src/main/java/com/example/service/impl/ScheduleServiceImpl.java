@@ -2,11 +2,12 @@ package com.example.service.impl;
 
 import com.example.dto.request.ScheduleRequestDto;
 import com.example.dto.response.ScheduleResponseDto;
-import com.example.entity.CourseEntity;
-import com.example.entity.GroupEntity;
-import com.example.entity.ScheduleEntity;
-import com.example.entity.TeacherEntity;
+import com.example.entity.Course;
+import com.example.entity.Group;
+import com.example.entity.Schedule;
+import com.example.entity.Teacher;
 import com.example.exception.BusinessRuleException;
+import com.example.exception.ExceptionMessages;
 import com.example.exception.ResourceNotFoundException;
 import com.example.mapper.ScheduleMapper;
 import com.example.repository.CourseRepository;
@@ -23,8 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,21 +39,24 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     @Transactional
     public ScheduleResponseDto createSchedule(ScheduleRequestDto dto) {
-        GroupEntity group = groupRepository.findById(dto.getGroupId())
-                .orElseThrow(() -> new ResourceNotFoundException("Группа с id " + dto.getGroupId() + " не найдена"));
+        Group group = groupRepository.findById(dto.groupId())
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.
+                        GROUP_NOT_FOUND.formatted(dto.groupId())));
 
-        TeacherEntity teacher = teacherRepository.findById(dto.getTeacherId())
-                .orElseThrow(() -> new ResourceNotFoundException("Преподаватель с id " + dto.getTeacherId() + " не найден"));
+        Teacher teacher = teacherRepository.findById(dto.teacherId())
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.
+                        TEACHER_NOT_FOUND.formatted(dto.teacherId())));
 
-        CourseEntity course = courseRepository.findById(dto.getCourseId())
-                .orElseThrow(() -> new ResourceNotFoundException("Курс с id " + dto.getCourseId() + " не найден"));
+        Course course = courseRepository.findById(dto.courseId())
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.
+                        COURSE_NOT_FOUND.formatted(dto.courseId())));
 
         if (!course.getTeacher().getId().equals(teacher.getId())) {
             throw new BusinessRuleException("Преподаватель " + teacher.getFirstName() + " " + teacher.getLastName() +
                     " не может вести курс '" + course.getName() + "', так как за этим курсом закреплен другой учитель!");
         }
 
-        ScheduleEntity schedule = scheduleMapper.toEntity(dto);
+        Schedule schedule = scheduleMapper.toEntity(dto);
         schedule.setGroup(group);
         schedule.setTeacher(teacher);
         schedule.setCourse(course);
@@ -65,17 +67,18 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     @Transactional
     public ScheduleResponseDto updateSchedule(Long id, ScheduleRequestDto dto) {
-        ScheduleEntity existing = scheduleRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Запись расписания с id " + id + " не найдена"));
+        Schedule existing = scheduleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.SCHEDULE_NOT_FOUND.formatted(id)));
 
-        GroupEntity group = groupRepository.findById(dto.getGroupId())
-                .orElseThrow(() -> new ResourceNotFoundException("Группа с id " + dto.getGroupId() + " не найдена"));
+        Group group = groupRepository.findById(dto.groupId())
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.GROUP_NOT_FOUND.formatted(dto.groupId())));
 
-        TeacherEntity teacher = teacherRepository.findById(dto.getTeacherId())
-                .orElseThrow(() -> new ResourceNotFoundException("Преподаватель с id " + dto.getTeacherId() + " не найден"));
+        Teacher teacher = teacherRepository.findById(dto.teacherId())
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.
+                        TEACHER_NOT_FOUND.formatted(dto.teacherId())));
 
-        CourseEntity course = courseRepository.findById(dto.getCourseId())
-                .orElseThrow(() -> new ResourceNotFoundException("Курс с id " + dto.getCourseId() + " не найден"));
+        Course course = courseRepository.findById(dto.courseId())
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.COURSE_NOT_FOUND.formatted(dto.courseId())));
 
         if (!course.getTeacher().getId().equals(teacher.getId())) {
             throw new BusinessRuleException("Преподаватель не соответствует данному курсу!");
@@ -84,8 +87,8 @@ public class ScheduleServiceImpl implements ScheduleService {
         existing.setGroup(group);
         existing.setTeacher(teacher);
         existing.setCourse(course);
-        existing.setStartTime(dto.getStartTime());
-        existing.setEndTime(dto.getEndTime());
+        existing.setStartTime(dto.startTime());
+        existing.setEndTime(dto.endTime());
 
         return scheduleMapper.toDto(scheduleRepository.save(existing));
     }
@@ -94,7 +97,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Transactional
     public void deleteSchedule(Long id) {
         if (!scheduleRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Запись расписания с id " + id + " не найдена");
+            throw new ResourceNotFoundException(ExceptionMessages.SCHEDULE_NOT_FOUND.formatted(id));
         }
         scheduleRepository.deleteById(id);
     }
@@ -102,7 +105,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     public Page<ScheduleResponseDto> searchSchedules(Long groupId, Long teacherId, Long courseId,
                                                      LocalDateTime startFrom, LocalDateTime endTo, Pageable pageable) {
-        Specification<ScheduleEntity> spec = Specification
+        Specification<Schedule> spec = Specification
                 .where(ScheduleSpecifications.hasGroup(groupId))
                 .and(ScheduleSpecifications.hasTeacher(teacherId))
                 .and(ScheduleSpecifications.hasCourse(courseId))

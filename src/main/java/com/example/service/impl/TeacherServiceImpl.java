@@ -2,7 +2,8 @@ package com.example.service.impl;
 
 import com.example.dto.request.TeacherRequestDto;
 import com.example.dto.response.TeacherResponseDto;
-import com.example.entity.TeacherEntity;
+import com.example.entity.Teacher;
+import com.example.exception.ExceptionMessages;
 import com.example.exception.ResourceNotFoundException;
 import com.example.mapper.TeacherMapper;
 import com.example.repository.TeacherRepository;
@@ -26,19 +27,19 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional
     public TeacherResponseDto createTeacher(TeacherRequestDto dto) {
-        TeacherEntity entity = teacherMapper.toEntity(dto);
-        TeacherEntity saved = teacherRepository.save(entity);
+        Teacher entity = teacherMapper.toEntity(dto);
+        Teacher saved = teacherRepository.save(entity);
         return teacherMapper.toDto(saved);
     }
 
     @Override
     @Transactional
     public TeacherResponseDto updateTeacher(Long id, TeacherRequestDto dto) {
-        TeacherEntity existing = teacherRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Преподаватель с id " + id + " не найден"));
+        Teacher existing = teacherRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.TEACHER_NOT_FOUND.formatted(id)));
 
-        existing.setFirstName(dto.getFirstName());
-        existing.setLastName(dto.getLastName());
+        existing.setFirstName(dto.firstName());
+        existing.setLastName(dto.lastName());
 
         return teacherMapper.toDto(teacherRepository.save(existing));
     }
@@ -47,7 +48,7 @@ public class TeacherServiceImpl implements TeacherService {
     @Transactional
     public void deleteTeacher(Long id) {
         if (!teacherRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Преподаватель с id " + id + " не найден");
+            throw new ResourceNotFoundException(ExceptionMessages.TEACHER_NOT_FOUND.formatted(id));
         }
         teacherRepository.deleteById(id);
     }
@@ -56,12 +57,12 @@ public class TeacherServiceImpl implements TeacherService {
     public TeacherResponseDto getTeacherById(Long id) {
         return teacherRepository.findById(id)
                 .map(teacherMapper::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Преподаватель с id " + id + " не найден"));
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.TEACHER_NOT_FOUND.formatted(id)));
     }
 
     @Override
     public Page<TeacherResponseDto> searchTeachers(String firstName, String lastName, Long courseId, Pageable pageable) {
-        Specification<TeacherEntity> spec = Specification
+        Specification<Teacher> spec = Specification
                 .where(TeacherSpecifications.hasFirstName(firstName))
                 .and(TeacherSpecifications.hasLastName(lastName))
                 .and(TeacherSpecifications.teachesCourse(courseId));

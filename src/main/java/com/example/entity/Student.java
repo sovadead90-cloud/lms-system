@@ -12,7 +12,7 @@ import java.util.Set;
 @Table(name = "students")
 @Getter
 @Setter
-public class StudentEntity {
+public class Student {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,16 +30,16 @@ public class StudentEntity {
             joinColumns = @JoinColumn(name = "student_id"),
             inverseJoinColumns = @JoinColumn(name = "group_id")
     )
-    private Set<GroupEntity> groups = new HashSet<>();
+    private Set<Group> groups = new HashSet<>();
 
 
-    public void addGroup(GroupEntity group) {
+    public void addGroup(Group group) {
         this.groups.add(group);
         group.getStudents().add(this);
     }
 
 
-    public void removeGroup(GroupEntity group) {
+    public void removeGroup(Group group) {
         this.groups.remove(group);
         group.getStudents().remove(this);
     }
@@ -48,8 +48,8 @@ public class StudentEntity {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        StudentEntity studentEntity = (StudentEntity) o;
-        return Objects.equals(id, studentEntity.id);
+        Student student = (Student) o;
+        return Objects.equals(id, student.id);
     }
 
     @Override

@@ -2,8 +2,9 @@ package com.example.service.impl;
 
 import com.example.dto.request.CourseRequestDto;
 import com.example.dto.response.CourseResponseDto;
-import com.example.entity.CourseEntity;
-import com.example.entity.TeacherEntity;
+import com.example.entity.Course;
+import com.example.entity.Teacher;
+import com.example.exception.ExceptionMessages;
 import com.example.exception.ResourceNotFoundException;
 import com.example.mapper.CourseMapper;
 import com.example.repository.CourseRepository;
@@ -27,11 +28,11 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional
     public CourseResponseDto createCourse(CourseRequestDto dto) {
-        TeacherEntity teacher = teacherRepository.findById(dto.getTeacherId())
-                .orElseThrow(() -> new ResourceNotFoundException("Преподаватель с id " + dto.getTeacherId() + " не найден"));
+        Teacher teacher = teacherRepository.findById(dto.teacherId())
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.TEACHER_NOT_FOUND.formatted(dto.teacherId())));
 
-        CourseEntity course = courseMapper.toEntity(dto);
-        course.setTeacher(teacher); // Привязываем извлеченного преподавателя вручную
+        Course course = courseMapper.toEntity(dto);
+        course.setTeacher(teacher);
 
         return courseMapper.toDto(courseRepository.save(course));
     }
@@ -39,14 +40,14 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional
     public CourseResponseDto updateCourse(Long id, CourseRequestDto dto) {
-        CourseEntity existing = courseRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Курс с id " + id + " не найден"));
+        Course existing = courseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.COURSE_NOT_FOUND.formatted(id)));
 
-        TeacherEntity teacher = teacherRepository.findById(dto.getTeacherId())
-                .orElseThrow(() -> new ResourceNotFoundException("Преподаватель с id " + dto.getTeacherId() + " не найден"));
+        Teacher teacher = teacherRepository.findById(dto.teacherId())
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.TEACHER_NOT_FOUND.formatted(dto.teacherId())));
 
-        existing.setName(dto.getName());
-        existing.setDescription(dto.getDescription());
+        existing.setName(dto.name());
+        existing.setDescription(dto.description());
         existing.setTeacher(teacher);
 
         return courseMapper.toDto(courseRepository.save(existing));
@@ -56,7 +57,7 @@ public class CourseServiceImpl implements CourseService {
     @Transactional
     public void deleteCourse(Long id) {
         if (!courseRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Курс с id " + id + " не найден");
+            throw new ResourceNotFoundException(ExceptionMessages.COURSE_NOT_FOUND.formatted(id));
         }
         courseRepository.deleteById(id);
     }
@@ -65,7 +66,7 @@ public class CourseServiceImpl implements CourseService {
     public CourseResponseDto getCourseById(Long id) {
         return courseRepository.findById(id)
                 .map(courseMapper::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException("Курс с id " + id + " не найден"));
+                .orElseThrow(() -> new ResourceNotFoundException(ExceptionMessages.COURSE_NOT_FOUND.formatted(id)));
     }
 
     @Override
