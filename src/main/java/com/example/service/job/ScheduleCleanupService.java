@@ -1,4 +1,4 @@
-package com.example.service;
+package com.example.service.job;
 
 import com.example.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;

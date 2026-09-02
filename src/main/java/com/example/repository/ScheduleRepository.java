@@ -11,7 +11,5 @@ import java.time.LocalDateTime;
 @Repository
 public interface ScheduleRepository extends JpaRepository<Schedule, Long>,
         JpaSpecificationExecutor<Schedule> {
-
-    @Modifying
     int deleteByEndTimeBefore(LocalDateTime targetDate);
 }
