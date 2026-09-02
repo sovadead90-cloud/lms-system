@@ -1,5 +1,6 @@
 package com.example.controller;
 
+import com.example.AbstractIT;
 import com.example.dto.ErrorResponse;
 import com.example.dto.request.ScheduleRequestDto;
 import com.example.dto.response.ScheduleResponseDto;
@@ -15,41 +16,22 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
-class ScheduleControllerTest {
+class ScheduleControllerIT extends AbstractIT {
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withDatabaseName("test_academy_db")
-            .withUsername("test_user")
-            .withPassword("test_pass");
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+    private static final String BASE_URL = "/api/v1/schedules";
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -113,7 +95,7 @@ class ScheduleControllerTest {
         );
 
         ResponseEntity<ScheduleResponseDto> response = restTemplate.postForEntity(
-                "/api/v1/schedules",
+                BASE_URL,
                 request,
                 ScheduleResponseDto.class
         );
@@ -129,7 +111,7 @@ class ScheduleControllerTest {
     @Test
     void shouldDeleteScheduleSuccessfully() {
         ResponseEntity<Void> response = restTemplate.exchange(
-                "/api/v1/schedules/" + testSchedule.getId(),
+                BASE_URL + "/" + testSchedule.getId(),
                 HttpMethod.DELETE,
                 HttpEntity.EMPTY,
                 Void.class
@@ -141,7 +123,7 @@ class ScheduleControllerTest {
 
     @Test
     void shouldSearchSchedulesByFilterWithModelAttribute() {
-        String url = UriComponentsBuilder.fromUriString("/api/v1/schedules/search")
+        String url = UriComponentsBuilder.fromUriString(BASE_URL + "/search")
                 .queryParam("groupId", testGroup.getId())
                 .toUriString();
 
@@ -178,7 +160,7 @@ class ScheduleControllerTest {
         );
 
         ResponseEntity<ErrorResponse> response = restTemplate.postForEntity(
-                "/api/v1/schedules", request, ErrorResponse.class
+                BASE_URL, request, ErrorResponse.class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -198,7 +180,7 @@ class ScheduleControllerTest {
         );
 
         ResponseEntity<ScheduleResponseDto> response = restTemplate.exchange(
-                "/api/v1/schedules/" + testSchedule.getId(),
+                BASE_URL + "/" + testSchedule.getId(),
                 HttpMethod.PUT,
                 new HttpEntity<>(updateRequest),
                 ScheduleResponseDto.class
@@ -223,7 +205,7 @@ class ScheduleControllerTest {
         );
 
         ResponseEntity<Map> response = restTemplate.postForEntity(
-                "/api/v1/schedules", invalidRequest, Map.class
+                BASE_URL, invalidRequest, Map.class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -233,7 +215,7 @@ class ScheduleControllerTest {
     @Test
     void shouldReturnNotFoundWhenDeletingNonExistentSchedule() {
         ResponseEntity<ErrorResponse> response = restTemplate.exchange(
-                "/api/v1/schedules/99999",
+                BASE_URL + "/99999",
                 HttpMethod.DELETE,
                 HttpEntity.EMPTY,
                 ErrorResponse.class
@@ -245,7 +227,7 @@ class ScheduleControllerTest {
 
     @Test
     void shouldReturnEmptyPageWhenNoSchedulesMatchFilter() {
-        String url = UriComponentsBuilder.fromUriString("/api/v1/schedules/search")
+        String url = UriComponentsBuilder.fromUriString( BASE_URL + "/search")
                 .queryParam("groupId", 99999L)
                 .toUriString();
 
