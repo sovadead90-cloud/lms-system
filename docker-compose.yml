@@ -1,0 +1,40 @@
+services:
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: edu_stream_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: academy_db
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - edu-network
+
+  app-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: edu_stream_app
+    restart: on-failure
+    ports:
+      - "8081:8081"
+    environment:
+      - DB_HOST=postgres-db
+      - DB_NAME=academy_db
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      - postgres-db
+    networks:
+      - edu-network
+
+volumes:
+  pgdata:
+
+networks:
+  edu-network:
+    driver: bridge
